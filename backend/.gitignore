@@ -83,3 +83,10 @@ dist/
 *.temp
 *.swp
 *.swo
+models/
+crime_hotspot_convlstm.keras
+feature_config.json
+grid_config.json
+model_metadata.json
+preprocessing.pkl
+

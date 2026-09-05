@@ -1,10 +1,10 @@
 from fastapi import APIRouter
-from app.schemas.prediction import PredictionRequest, PredictionResponse
-from app.services.prediction_service import predict
+from app.schemas.prediction_hotspot import HotspotPredictionRequest, HotspotPredictionResponse
+from app.services.prediction_hotspot_service import generate_hotspot_prediction
 
 router = APIRouter()
 
 
-@router.post("/predictions/predict", response_model=PredictionResponse)
-async def run_prediction(payload: PredictionRequest):
-    return predict(payload.model_dump())
+@router.post("/predictions/hotspots", response_model=HotspotPredictionResponse)
+async def predict_hotspots(payload: HotspotPredictionRequest):
+    return await generate_hotspot_prediction(payload.prediction_date)

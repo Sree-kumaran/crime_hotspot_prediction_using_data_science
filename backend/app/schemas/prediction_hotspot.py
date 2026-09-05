@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import date, datetime
-from typing import List
+from typing import List, Optional
 
 
 class HotspotPredictionRequest(BaseModel):
@@ -15,14 +15,23 @@ class HotspotItem(BaseModel):
     risk_level: str
 
 
-class PredictionSummary(BaseModel):
+class HighestRiskLocation(BaseModel):
+    latitude: float
+    longitude: float
+    predicted_intensity: float
+    risk_score: float
+    risk_level: str
+
+
+class HotspotSummary(BaseModel):
     total_hotspots: int
     high_risk: int
     medium_risk: int
     low_risk: int
+    highest_risk_location: Optional[HighestRiskLocation] = None
 
 
-class PredictionModelInfo(BaseModel):
+class ModelInfo(BaseModel):
     name: str
     version: str
 
@@ -30,6 +39,6 @@ class PredictionModelInfo(BaseModel):
 class HotspotPredictionResponse(BaseModel):
     prediction_date: date
     generated_at: datetime
-    model: PredictionModelInfo
-    summary: PredictionSummary
+    model: ModelInfo
+    summary: HotspotSummary
     hotspots: List[HotspotItem]

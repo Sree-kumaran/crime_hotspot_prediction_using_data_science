@@ -1,5 +1,7 @@
-import { predictionApi } from "../api/predictionApi";
+import { apiClient } from "../api/apiClient";
 
-export async function predictCrime(payload) {
-  return predictionApi.predict(payload);
+export async function generateHotspotPrediction(predictionDate) {
+  return apiClient.post("/api/predictions/hotspots", {
+    prediction_date: predictionDate,
+  });
 }
