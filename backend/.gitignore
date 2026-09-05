@@ -1,0 +1,85 @@
+# ================================
+# Python
+# ================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ================================
+# Virtual Environment
+# ================================
+
+venv/
+.venv/
+env/
+ENV/
+
+# ================================
+# Environment Variables / Secrets
+# ================================
+
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Keep an example environment file
+!.env.example
+
+# ================================
+# IDE / Editors
+# ================================
+
+.vscode/
+.idea/
+
+# ================================
+# OS Generated Files
+# ================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ================================
+# Testing / Coverage
+# ================================
+
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+*.log
+
+# ================================
+# Type Checking / Linters
+# ================================
+
+.mypy_cache/
+.ruff_cache/
+.pyright/
+
+# ================================
+# Build / Distribution
+# ================================
+
+build/
+dist/
+*.egg-info/
+
+# ================================
+# Jupyter Notebook
+# ================================
+
+.ipynb_checkpoints/
+
+# ================================
+# Temporary Files
+# ================================
+
+*.tmp
+*.temp
+*.swp
+*.swo

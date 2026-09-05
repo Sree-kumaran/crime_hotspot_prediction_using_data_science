@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+    background-color: #1f2f36; /* app background (darker than primary) */
+    color: #e5e7eb;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+    --tw-ring-color: #2a3d45;
+    --tw-ring-offset-color: #111827;
+  }
+}
+
+@layer components {
+  .page-shell {
+    min-height: 100vh;
+    background-color: #1f2f36;
+  }
+
+  .section-title {
+    @apply text-2xl font-semibold;
+    color: #f3f4f6;
+  }
+
+  .section-subtitle {
+    @apply text-sm;
+    color: #c7c7c7;
+  }
+
+  .card-base {
+    @apply rounded-xl border shadow-sm;
+    background-color: #2a3d45;
+    border-color: #3f535c;
+    color: #e5e7eb;
+  }
+}
