@@ -42,33 +42,46 @@ function IncidentDetailsPage() {
         <CardBody className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <p>
-              <strong>Crime Type:</strong> {incident.type}
+              <strong>Crime Type:</strong> {incident.crime_type || incident.type || "-"}
             </p>
             <p>
-              <strong>Location:</strong> {incident.location}
+              <strong>Location:</strong> {incident.location || incident.area || "-"}
             </p>
             <p>
-              <strong>Date:</strong> {incident.date}
+              <strong>Date:</strong> {incident.date || "-"}
             </p>
             <p>
-              <strong>Time:</strong> {incident.time}
+              <strong>Time:</strong> {incident.time || "-"}
             </p>
             <p>
               <strong>Coordinates:</strong> {incident.latitude},{" "}
               {incident.longitude}
             </p>
             <p>
-              <strong>Status:</strong> {incident.status}
+              <strong>Status:</strong> {incident.status || "Open"}
             </p>
             <p>
-              <strong>Risk:</strong> <RiskBadge level={incident.riskLevel} />
+              <strong>Risk / Severity:</strong>{" "}
+              <RiskBadge level={incident.severity || incident.riskLevel || "Moderate"} />
             </p>
             <p>
-              <strong>Description:</strong> {incident.description}
+              <strong>Description:</strong> {incident.description || "No additional description recorded."}
             </p>
           </div>
-          <MapContainer height="h-72" />
+          <MapContainer
+            hotspots={[
+              {
+                latitude: incident.latitude || 40.75,
+                longitude: incident.longitude || -73.98,
+                predicted_intensity: 1.0,
+                risk_score: 0.8,
+                risk_level: incident.severity === "High" ? "High" : "Medium",
+              },
+            ]}
+            height="h-72"
+          />
         </CardBody>
+
       </Card>
 
       <div className="flex gap-2">

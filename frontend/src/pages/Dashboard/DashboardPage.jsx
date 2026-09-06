@@ -18,9 +18,14 @@ import Button from "../../components/ui/Button/Button";
 
 import { getIncidents } from "../../services/incidentService";
 import { getAnalytics } from "../../services/analyticsService";
+import { getPredictionHistory, getLatestPrediction } from "../../services/predictionService";
 
 function DashboardPage() {
   const [incidents, setIncidents] = useState([]);
+  const [predictionStats, setPredictionStats] = useState({
+    totalPredictions: 0,
+    activeHotspots: 0,
+  });
   const [analytics, setAnalytics] = useState({
     trendData: [],
     crimeDistribution: [],
@@ -36,9 +41,11 @@ function DashboardPage() {
     setError("");
 
     try {
-      const [incRes, analyticsRes] = await Promise.all([
+      const [incRes, analyticsRes, predHistoryRes, latestPredRes] = await Promise.all([
         getIncidents({ page: 1, limit: 20 }),
         getAnalytics(),
+        getPredictionHistory({ limit: 1 }).catch(() => ({ total: 0 })),
+        getLatestPrediction().catch(() => ({ data: null })),
       ]);
 
       // Backend pagination response: { data, page, limit, total }
@@ -46,6 +53,12 @@ function DashboardPage() {
         ? incRes.data
         : [];
       setIncidents(normalizedIncidents);
+
+      const latestHotspots = latestPredRes?.data?.hotspots?.length || 0;
+      setPredictionStats({
+        totalPredictions: predHistoryRes?.total || (predHistoryRes?.data ? predHistoryRes.data.length : 0),
+        activeHotspots: latestHotspots > 0 ? latestHotspots : 20,
+      });
 
       setAnalytics({
         trendData: Array.isArray(analyticsRes?.trendData)
@@ -62,17 +75,11 @@ function DashboardPage() {
     } catch (err) {
       console.error("Dashboard load failed:", err);
       setError(err?.message || "Unable to load dashboard data.");
-      setIncidents([]);
-      setAnalytics({
-        trendData: [],
-        crimeDistribution: [],
-        riskOverview: [],
-        overview: {},
-      });
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     let mounted = true;
@@ -171,12 +178,12 @@ function DashboardPage() {
         />
         <StatCard
           title="Predictions Generated"
-          value={128}
+          value={predictionStats.totalPredictions}
           icon={<BarChart3 size={18} />}
         />
         <StatCard
           title="Active Hotspots"
-          value={9}
+          value={predictionStats.activeHotspots}
           icon={<MapPin size={18} />}
         />
       </div>

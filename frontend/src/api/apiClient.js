@@ -1,39 +1,49 @@
 const RAW_BASE = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
-const BASE_URL = RAW_BASE.replace(/\/+$/, ""); // remove trailing slash safely
+const BASE_URL = RAW_BASE.replace(/\/+$/, "");
 
-async function request(path, options = {}) {
-  try {
-    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-    const url = `${BASE_URL}${normalizedPath}`;
+function normalizeError(data, status) {
+  if (!data) return `Request failed (${status})`;
 
-    const res = await fetch(url, {
-      headers: {
-        "Content-Type": "application/json",
-        ...(options.headers || {}),
-      },
-      ...options,
-    });
+  if (typeof data === "string") return data;
 
-    const isJson = res.headers
-      .get("content-type")
-      ?.includes("application/json");
-    const data = isJson ? await res.json() : await res.text();
-
-    if (!res.ok) {
-      throw new Error(data?.detail || `HTTP ${res.status}`);
-    }
-
-    return data;
-  } catch (err) {
-    throw new Error(err.message || "Network error");
+  // FastAPI validation shape
+  if (Array.isArray(data.detail)) {
+    return data.detail.map((d) => d.msg).join(", ");
   }
+
+  if (typeof data.detail === "string") return data.detail;
+
+  if (typeof data.message === "string") return data.message;
+
+  return `Request failed (${status})`;
+}
+
+async function request(path, options = {}, token = null) {
+  const url = `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(url, { ...options, headers });
+  const isJson = res.headers.get("content-type")?.includes("application/json");
+  const data = isJson ? await res.json() : await res.text();
+
+  if (!res.ok) {
+    const msg = normalizeError(data, res.status);
+    throw new Error(msg);
+  }
+
+  return data;
 }
 
 export const apiClient = {
-  get: (path) => request(path),
-  post: (path, body) =>
-    request(path, { method: "POST", body: JSON.stringify(body) }),
-  put: (path, body) =>
-    request(path, { method: "PUT", body: JSON.stringify(body) }),
-  delete: (path) => request(path, { method: "DELETE" }),
+  get: (path, token = null) => request(path, {}, token),
+  post: (path, body, token = null) =>
+    request(path, { method: "POST", body: JSON.stringify(body) }, token),
+  put: (path, body, token = null) =>
+    request(path, { method: "PUT", body: JSON.stringify(body) }, token),
+  delete: (path, token = null) => request(path, { method: "DELETE" }, token),
 };

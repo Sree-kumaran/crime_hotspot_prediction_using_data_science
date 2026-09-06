@@ -1,11 +1,28 @@
-function MapContainer({ children, height = "h-80" }) {
+import HotspotMap from "./HotspotMap";
+
+function MapContainer({
+  hotspots = [],
+  incidents = [],
+  height = "h-[450px]",
+  showLegend = true,
+  selectedHotspot = null,
+  onSelectHotspot,
+  children,
+}) {
   return (
-    <div className={`card-base ${height} relative overflow-hidden`}>
-      <div className="absolute inset-0 bg-slate-100 grid place-items-center text-text-secondary">
-        Map placeholder (library integration in Phase 2)
-      </div>
+    <div className="w-full relative">
+      <HotspotMap
+        hotspots={hotspots}
+        incidents={incidents}
+        height={height}
+        showLegend={showLegend}
+        selectedHotspot={selectedHotspot}
+        onSelectHotspot={onSelectHotspot}
+      />
       {children}
     </div>
   );
 }
+
 export default MapContainer;
+

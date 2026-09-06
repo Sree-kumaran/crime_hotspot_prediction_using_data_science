@@ -16,17 +16,28 @@ function IncidentsPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getIncidents().then(setRows);
+    getIncidents({ limit: 100 }).then((res) => {
+      const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setRows(list);
+    }).catch((err) => {
+      console.error("Failed to fetch incidents:", err);
+      setRows([]);
+    });
   }, []);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
-      const matchSearch = [r.id, r.location, r.type]
+      const id = r.id || r._id || "";
+      const loc = r.location || r.area || "";
+      const t = r.crime_type || r.type || "";
+      const sev = r.severity || r.riskLevel || "";
+
+      const matchSearch = [id, loc, t]
         .join(" ")
         .toLowerCase()
         .includes(search.toLowerCase());
-      const matchRisk = risk ? r.riskLevel.toLowerCase() === risk : true;
-      const matchType = type ? r.type.toLowerCase() === type : true;
+      const matchRisk = risk ? sev.toLowerCase() === risk.toLowerCase() : true;
+      const matchType = type ? t.toLowerCase() === type.toLowerCase() : true;
       return matchSearch && matchRisk && matchType;
     });
   }, [rows, search, risk, type]);
@@ -42,27 +53,33 @@ function IncidentsPage() {
     { key: "actions", title: "Actions" },
   ];
 
-  const data = filtered.map((r) => ({
-    ...r,
-    risk: <RiskBadge level={r.riskLevel} />,
-    actions: (
-      <div className="flex gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => navigate(`/incidents/${r.id}`)}
-        >
-          View
-        </Button>
-        <Button size="sm" variant="ghost">
-          Edit
-        </Button>
-        <Button size="sm" variant="danger">
-          Delete
-        </Button>
-      </div>
-    ),
-  }));
+  const data = filtered.map((r) => {
+    const incId = r.id || r._id;
+    const incType = r.crime_type || r.type || "-";
+    const incRisk = r.severity || r.riskLevel || "Moderate";
+
+    return {
+      id: incId,
+      type: incType,
+      location: r.location || r.area || "-",
+      date: r.date || "-",
+      time: r.time || "-",
+      risk: <RiskBadge level={incRisk} />,
+      status: r.status || "Open",
+      actions: (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate(`/incidents/${incId}`)}
+          >
+            View
+          </Button>
+        </div>
+      ),
+    };
+  });
+
 
   return (
     <section className="space-y-6">

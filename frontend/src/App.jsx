@@ -14,10 +14,8 @@ import SettingsPage from "./pages/Settings/SettingsPage";
 function App() {
   return (
     <Routes>
-      {/* Keep Phase 1 showcase accessible */}
       <Route path="/design-system" element={<DesignSystemShowcase />} />
 
-      {/* Phase 2 app routes */}
       <Route element={<AppLayout />}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
