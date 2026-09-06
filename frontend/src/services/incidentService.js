@@ -8,3 +8,7 @@ export async function getIncidents(params = {}) {
 export async function getIncidentById(id) {
   return crimeApi.getCrimeById(id);
 }
+
+export async function createCrimeRecord(payload) {
+  return crimeApi.createCrime(payload);
+}

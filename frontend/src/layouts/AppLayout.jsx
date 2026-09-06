@@ -8,6 +8,7 @@ const navItems = [
   { id: "dashboard", label: "Dashboard", path: "/dashboard" },
   { id: "map", label: "Crime Map", path: "/map" },
   { id: "incidents", label: "Incidents", path: "/incidents" },
+  { id: "addData", label: "Add Crime Data", path: "/add-data" },
   { id: "prediction", label: "Prediction", path: "/prediction" },
   { id: "analytics", label: "Analytics", path: "/analytics" },
   { id: "reports", label: "Reports", path: "/reports" },
@@ -16,6 +17,7 @@ const navItems = [
 
 function getPageTitle(pathname) {
   if (pathname.startsWith("/incidents/")) return "Incident Details";
+  if (pathname.startsWith("/add-data")) return "Add Crime Data";
   const hit = navItems.find((i) => pathname.startsWith(i.path));
   return hit ? hit.label : "Crime Analytics";
 }
@@ -27,6 +29,7 @@ function AppLayout() {
 
   const activeId = useMemo(() => {
     if (location.pathname.startsWith("/incidents/")) return "incidents";
+    if (location.pathname.startsWith("/add-data")) return "addData";
     const hit = navItems.find((i) => location.pathname.startsWith(i.path));
     return hit?.id || "dashboard";
   }, [location.pathname]);

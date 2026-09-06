@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { MapPin, Filter, Layers, RefreshCw, Calendar } from "lucide-react";
+import { MapPin, Filter, RefreshCw, Layers } from "lucide-react";
 import { Card, CardBody, CardHeader } from "../../components/ui/Card/Card";
 import Input from "../../components/ui/Input/Input";
 import Select from "../../components/ui/Select/Select";
@@ -18,7 +18,6 @@ export default function MapPage() {
   const [selectedHotspot, setSelectedHotspot] = useState(null);
 
   // Filter states
-  const [search, setSearch] = useState("");
   const [riskLevel, setRiskLevel] = useState("all");
   const [targetDate, setTargetDate] = useState("2024-03-25");
 
@@ -26,7 +25,6 @@ export default function MapPage() {
     setLoading(true);
     setError("");
     try {
-      // 1. Fetch latest or date-specific prediction
       let predRes = null;
       if (date) {
         predRes = await generateHotspotPrediction(date);
@@ -40,7 +38,6 @@ export default function MapPage() {
 
       setHotspots(predRes?.hotspots || []);
 
-      // 2. Fetch recent incidents
       const incRes = await getIncidents({ limit: 50 });
       setIncidents(Array.isArray(incRes?.data) ? incRes.data : []);
     } catch (err) {
@@ -66,14 +63,14 @@ export default function MapPage() {
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-[#262c4d]">
         <div>
-          <h2 className="section-title flex items-center gap-2">
-            <MapPin className="w-6 h-6 text-primary-400" />
-            NYC Crime Hotspot Map
+          <h2 className="section-title flex items-center gap-2.5">
+            <MapPin className="w-5 h-5 text-palette-almond" />
+            NYC Crime Hotspot Map Visualizer
           </h2>
           <p className="section-subtitle">
-            Spatiotemporal grid matrix & neural network risk clusters across New York City
+            Geospatial density matrix & ConvLSTM risk clusters across New York City
           </p>
         </div>
 
@@ -81,59 +78,60 @@ export default function MapPage() {
           variant="outline"
           onClick={() => loadMapData(targetDate)}
           disabled={loading}
-          className="flex items-center gap-1.5 self-start md:self-auto text-xs"
+          className="flex items-center gap-1.5 self-start sm:self-auto text-xs"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh Map Data
+          Refresh Map
         </Button>
       </div>
 
-      <Card className="border-[#30454f]">
-        <CardHeader>
-          <h3 className="text-base font-semibold flex items-center gap-2">
-            <Filter className="w-4 h-4 text-primary-400" />
-            Spatiotemporal Filter Controls
+      <Card className="border-[#262c4d]">
+        <CardHeader className="bg-palette-ink/40 py-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-palette-almond flex items-center gap-2">
+            <Filter className="w-3.5 h-3.5 text-palette-lilac" />
+            Spatiotemporal Matrix Query
           </h3>
         </CardHeader>
-        <CardBody className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <CardBody className="p-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <Input
-            label="Filter Date"
+            label="Inference Target Date"
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
           />
           <Select
-            label="Risk Level Filter"
+            label="Risk Filter"
             value={riskLevel}
             onChange={(e) => setRiskLevel(e.target.value)}
             options={[
-              { value: "all", label: "All Risk Levels" },
-              { value: "high", label: "High Risk (>75%)" },
-              { value: "medium", label: "Medium Risk (45-75%)" },
+              { value: "all", label: "All Priority Levels" },
+              { value: "high", label: "High Risk Only (>75%)" },
+              { value: "medium", label: "Moderate Risk (45-75%)" },
               { value: "low", label: "Low Risk (<45%)" },
             ]}
           />
-          <div className="lg:col-span-2 flex items-end">
+          <div className="sm:col-span-2 flex items-end">
             <Button
-              className="w-full"
+              className="w-full h-10 font-bold"
               onClick={() => loadMapData(targetDate)}
               disabled={loading}
+              loading={loading}
             >
-              {loading ? "Computing Spatiotemporal Density..." : "Apply Grid Filters"}
+              {loading ? "Computing Spatiotemporal Density..." : "Apply Matrix Filter"}
             </Button>
           </div>
         </CardBody>
       </Card>
 
-      {error && <Alert type="error" title="Map Error" message={error} />}
+      {error && <Alert type="error" title="Spatial Map Error" message={error} />}
 
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2">
           <MapContainer
             hotspots={filteredHotspots}
             selectedHotspot={selectedHotspot}
             onSelectHotspot={setSelectedHotspot}
-            height="h-[520px]"
+            height="h-[540px]"
           />
         </div>
 
@@ -141,38 +139,36 @@ export default function MapPage() {
           <RiskLegend />
 
           {selectedHotspot && (
-            <Card className="border-primary-500/40 bg-[#162730]">
-              <CardHeader>
-                <h4 className="text-sm font-semibold text-primary-300">
-                  Selected Hotspot Detail
+            <Card className="border-palette-grape bg-palette-prussian shadow-glow">
+              <CardHeader className="py-3 bg-palette-ink/50 border-[#262c4d]">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-palette-almond">
+                  Selected Hotspot Inspector
                 </h4>
               </CardHeader>
-              <CardBody className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Risk Level:</span>
-                  <span className="font-bold text-text-primary">
+              <CardBody className="space-y-2.5 p-4 text-xs">
+                <div className="flex justify-between items-center pb-1.5 border-b border-[#262c4d]">
+                  <span className="text-palette-lilac">Risk Classification:</span>
+                  <span className="font-bold text-palette-almond">
                     {selectedHotspot.risk_level}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Risk Score:</span>
-                  <span className="font-bold text-primary-300">
+                <div className="flex justify-between items-center">
+                  <span className="text-palette-lilac">Risk Score:</span>
+                  <span className="font-bold text-palette-almond">
                     {(selectedHotspot.risk_score * 100).toFixed(1)}%
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Predicted Intensity:</span>
-                  <span className="font-semibold text-text-primary">
+                <div className="flex justify-between items-center">
+                  <span className="text-palette-lilac">Predicted Intensity:</span>
+                  <span className="font-semibold text-palette-almond">
                     {selectedHotspot.predicted_intensity}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Latitude:</span>
-                  <span>{selectedHotspot.latitude}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">Longitude:</span>
-                  <span>{selectedHotspot.longitude}</span>
+                <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-[#262c4d] text-palette-lilac/80">
+                  <span>GPS Coordinates:</span>
+                  <span className="font-mono text-palette-almond">
+                    {selectedHotspot.latitude}, {selectedHotspot.longitude}
+                  </span>
                 </div>
               </CardBody>
             </Card>

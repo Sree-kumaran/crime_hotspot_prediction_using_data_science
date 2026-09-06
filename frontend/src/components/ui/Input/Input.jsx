@@ -15,7 +15,7 @@ function Input({
   return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-gray-100">
+        <label htmlFor={id} className="block text-xs font-semibold uppercase tracking-wider text-palette-lilac">
           {label} {required && <span className="text-red-400">*</span>}
         </label>
       )}
@@ -25,9 +25,11 @@ function Input({
         type={type}
         aria-invalid={Boolean(error)}
         className={cn(
-          "w-full h-10 rounded-lg border bg-[#24353c] px-3 text-sm text-gray-100 placeholder:text-[#a3a3a3]",
-          error ? "border-red-500" : "border-[#3f535c] focus:border-[#4e6670]",
-          "focus:outline-none focus:ring-2 focus:ring-[#3f535c] disabled:bg-[#2a3d45] disabled:text-gray-400",
+          "w-full h-10 rounded-lg border bg-palette-ink px-3 text-sm text-palette-almond placeholder:text-palette-lilac/50",
+          error
+            ? "border-red-500/80 focus:border-red-400 focus:ring-red-400/20"
+            : "border-[#2b3254] focus:border-palette-lilac focus:ring-1 focus:ring-palette-lilac/30",
+          "focus:outline-none transition-colors duration-150 disabled:bg-[#12162a] disabled:text-palette-muted",
           className,
         )}
         {...props}
@@ -38,7 +40,7 @@ function Input({
           {error}
         </p>
       ) : helperText ? (
-        <p className="text-xs text-[#a3a3a3]">{helperText}</p>
+        <p className="text-xs text-palette-lilac/70">{helperText}</p>
       ) : null}
     </div>
   );

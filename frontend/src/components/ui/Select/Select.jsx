@@ -1,3 +1,5 @@
+import { cn } from "../../../lib/utils";
+
 function Select({
   label,
   options = [],
@@ -5,6 +7,7 @@ function Select({
   error,
   required,
   helperText,
+  className,
   ...props
 }) {
   const id =
@@ -14,7 +17,7 @@ function Select({
   return (
     <div className="space-y-1.5">
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-gray-100">
+        <label htmlFor={id} className="block text-xs font-semibold uppercase tracking-wider text-palette-lilac">
           {label} {required && <span className="text-red-400">*</span>}
         </label>
       )}
@@ -22,21 +25,24 @@ function Select({
       <select
         id={id}
         aria-invalid={Boolean(error)}
-        className={`w-full h-10 rounded-lg border px-3 text-sm bg-[#24353c] text-gray-100 ${
+        className={cn(
+          "w-full h-10 rounded-lg border px-3 text-sm bg-palette-ink text-palette-almond",
           error
-            ? "border-red-500"
-            : "border-[#3f535c] focus:border-[#4e6670] focus:ring-2 focus:ring-[#3f535c]"
-        }`}
+            ? "border-red-500/80 focus:border-red-400 focus:ring-red-400/20"
+            : "border-[#2b3254] focus:border-palette-lilac focus:ring-1 focus:ring-palette-lilac/30",
+          "focus:outline-none transition-colors duration-150 disabled:bg-[#12162a] disabled:text-palette-muted",
+          className,
+        )}
         {...props}
       >
-        <option value="" className="text-[#a3a3a3]">
+        <option value="" className="text-palette-lilac bg-palette-ink">
           {placeholder}
         </option>
         {options.map((opt) => (
           <option
             key={opt.value}
             value={opt.value}
-            className="text-gray-100 bg-[#24353c]"
+            className="text-palette-almond bg-palette-prussian"
           >
             {opt.label}
           </option>
@@ -48,7 +54,7 @@ function Select({
           {error}
         </p>
       ) : helperText ? (
-        <p className="text-xs text-[#a3a3a3]">{helperText}</p>
+        <p className="text-xs text-palette-lilac/70">{helperText}</p>
       ) : null}
     </div>
   );

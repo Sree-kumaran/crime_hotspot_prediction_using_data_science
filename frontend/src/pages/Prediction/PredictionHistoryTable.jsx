@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { History, Eye, RefreshCw, AlertCircle, Calendar } from "lucide-react";
+import { History, Eye, RefreshCw, Calendar, ShieldAlert } from "lucide-react";
 import { Card, CardBody, CardHeader } from "../../components/ui/Card/Card";
 import Button from "../../components/ui/Button/Button";
 import Table from "../../components/ui/Table/Table";
-import { RiskBadge } from "../../components/ui/Badge/Badge";
 import { getPredictionHistory } from "../../services/predictionService";
 import Alert from "../../components/ui/Alert/Alert";
 
@@ -24,7 +23,7 @@ export default function PredictionHistoryTable({ onSelectPrediction }) {
       setPage(pageNum);
     } catch (err) {
       console.error("Failed to load history:", err);
-      setError(err?.message || "Failed to load prediction history.");
+      setError(err?.message || "Failed to load prediction history from database.");
     } finally {
       setLoading(false);
     }
@@ -36,10 +35,10 @@ export default function PredictionHistoryTable({ onSelectPrediction }) {
 
   const columns = [
     { key: "prediction_date", title: "Target Date" },
-    { key: "generated_at", title: "Generated At" },
+    { key: "generated_at", title: "Timestamp" },
     { key: "total_hotspots", title: "Hotspots" },
     { key: "high_risk", title: "High Risk" },
-    { key: "risk_breakdown", title: "Risk Profile" },
+    { key: "risk_breakdown", title: "Risk Distribution" },
     { key: "actions", title: "Actions" },
   ];
 
@@ -51,14 +50,14 @@ export default function PredictionHistoryTable({ onSelectPrediction }) {
 
     return {
       prediction_date: (
-        <span className="font-semibold text-text-primary flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-primary-400" />
+        <span className="font-semibold text-palette-almond flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 text-palette-lilac" />
           {item.prediction_date}
         </span>
       ),
-      generated_at: <span className="text-xs text-text-muted">{genDate}</span>,
+      generated_at: <span className="text-xs text-palette-lilac">{genDate}</span>,
       total_hotspots: (
-        <span className="font-bold text-text-primary">
+        <span className="font-bold text-palette-almond">
           {summary.total_hotspots ?? item.hotspots?.length ?? 0}
         </span>
       ),
@@ -69,13 +68,13 @@ export default function PredictionHistoryTable({ onSelectPrediction }) {
       ),
       risk_breakdown: (
         <div className="flex gap-1.5 items-center">
-          <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-900/40 text-red-300 border border-red-700/50">
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-950/60 text-red-300 border border-red-800/50">
             {summary.high_risk ?? 0} H
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-900/40 text-amber-300 border border-amber-700/50">
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-950/60 text-amber-300 border border-amber-800/50">
             {summary.medium_risk ?? 0} M
           </span>
-          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-900/40 text-emerald-300 border border-emerald-700/50">
+          <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-950/60 text-emerald-300 border border-emerald-800/50">
             {summary.low_risk ?? 0} L
           </span>
         </div>
@@ -87,41 +86,43 @@ export default function PredictionHistoryTable({ onSelectPrediction }) {
           onClick={() => onSelectPrediction(item)}
           className="flex items-center gap-1 text-xs"
         >
-          <Eye className="w-3 h-3" /> View Map
+          <Eye className="w-3 h-3" /> Inspect Map
         </Button>
       ),
     };
   });
 
   return (
-    <Card className="border-[#30454f]">
-      <CardHeader className="flex justify-between items-center">
+    <Card className="border-[#262c4d]">
+      <CardHeader className="flex justify-between items-center bg-palette-ink/40">
         <div className="flex items-center gap-2">
-          <History className="w-4 h-4 text-primary-400" />
-          <h3 className="text-base font-semibold">Prediction Audit History</h3>
+          <History className="w-4 h-4 text-palette-almond" />
+          <h3 className="text-sm font-semibold text-palette-almond">
+            Prediction Audit Log (MongoDB)
+          </h3>
         </div>
         <Button
           size="sm"
           variant="ghost"
           onClick={() => fetchHistory(page)}
           disabled={loading}
-          className="flex items-center gap-1 text-xs"
+          className="flex items-center gap-1.5 text-xs"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </CardHeader>
-      <CardBody className="space-y-4">
-        {error && <Alert type="error" title="History Error" message={error} />}
+      <CardBody className="p-4 space-y-4">
+        {error && <Alert type="error" title="Audit Error" message={error} />}
 
         <Table
           columns={columns}
           data={tableData}
-          emptyText="No historical predictions found. Generate a prediction above to log records."
+          emptyText="No historical predictions recorded in database. Run a prediction to create an audit record."
         />
 
         {total > 10 && (
-          <div className="flex justify-between items-center pt-2 text-xs text-text-muted">
+          <div className="flex justify-between items-center pt-2 text-xs text-palette-lilac">
             <span>
               Showing {tableData.length} of {total} records
             </span>

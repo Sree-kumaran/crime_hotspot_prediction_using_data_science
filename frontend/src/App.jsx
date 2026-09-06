@@ -6,6 +6,7 @@ import DashboardPage from "./pages/Dashboard/DashboardPage";
 import MapPage from "./pages/Map/MapPage";
 import IncidentsPage from "./pages/Incidents/IncidentsPage";
 import IncidentDetailsPage from "./pages/Incidents/IncidentDetailsPage";
+import AddCrimeDataPage from "./pages/CrimeData/AddCrimeDataPage";
 import PredictionPage from "./pages/Prediction/PredictionPage";
 import AnalyticsPage from "./pages/Analytics/AnalyticsPage";
 import ReportsPage from "./pages/Reports/ReportsPage";
@@ -22,6 +23,7 @@ function App() {
         <Route path="/map" element={<MapPage />} />
         <Route path="/incidents" element={<IncidentsPage />} />
         <Route path="/incidents/:id" element={<IncidentDetailsPage />} />
+        <Route path="/add-data" element={<AddCrimeDataPage />} />
         <Route path="/prediction" element={<PredictionPage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/reports" element={<ReportsPage />} />

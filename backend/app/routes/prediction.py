@@ -14,14 +14,19 @@ def serialize_prediction(doc):
     return doc
 
 
+@router.post("/predictions", response_model=HotspotPredictionResponse)
+async def create_prediction(payload: HotspotPredictionRequest):
+    return await generate_hotspot_prediction(payload)
+
+
 @router.post("/predictions/hotspots", response_model=HotspotPredictionResponse)
 async def predict_hotspots(payload: HotspotPredictionRequest):
-    return await generate_hotspot_prediction(payload.prediction_date)
+    return await generate_hotspot_prediction(payload)
 
 
 @router.post("/predict", response_model=HotspotPredictionResponse)
 async def predict_alias(payload: HotspotPredictionRequest):
-    return await generate_hotspot_prediction(payload.prediction_date)
+    return await generate_hotspot_prediction(payload)
 
 
 @router.get("/predictions")
@@ -61,4 +66,4 @@ async def get_prediction_by_id(prediction_id: str):
 
     if not doc:
         raise HTTPException(status_code=404, detail="Prediction record not found")
-    return serialize_prediction(doc)
+    return serialize_prediction(doc)

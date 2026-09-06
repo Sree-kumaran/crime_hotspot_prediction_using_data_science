@@ -1,42 +1,48 @@
 import { AlertCircle, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { cn } from "../../../lib/utils";
 
 const map = {
   success: {
     icon: CheckCircle2,
-    box: "bg-success-soft border-success/40",
-    text: "text-green-900",
+    box: "bg-emerald-950/60 border-emerald-700/60 text-emerald-200",
+    iconColor: "text-emerald-400",
   },
   warning: {
     icon: AlertTriangle,
-    box: "bg-warning-soft border-warning/40",
-    text: "text-amber-900",
+    box: "bg-amber-950/60 border-amber-700/60 text-amber-200",
+    iconColor: "text-amber-400",
   },
   error: {
     icon: AlertCircle,
-    box: "bg-danger-soft border-danger/40",
-    text: "text-red-900",
+    box: "bg-red-950/60 border-red-700/60 text-red-200",
+    iconColor: "text-red-400",
   },
   info: {
     icon: Info,
-    box: "bg-info-soft border-info/40",
-    text: "text-sky-900",
+    box: "bg-[#161b33] border-palette-grape text-palette-almond",
+    iconColor: "text-palette-lilac",
   },
 };
 
-function Alert({ type = "info", title, message }) {
-  const cfg = map[type];
+function Alert({ type = "info", title, message, className }) {
+  const cfg = map[type] || map.info;
   const Icon = cfg.icon;
   return (
     <div
-      className={`rounded-lg border p-3 flex gap-3 ${cfg.box} ${cfg.text}`}
+      className={cn(
+        "rounded-xl border p-4 flex gap-3 shadow-md transition-all",
+        cfg.box,
+        className,
+      )}
       role="alert"
     >
-      <Icon size={18} className="mt-0.5" />
-      <div>
-        {title && <p className="text-small font-semibold">{title}</p>}
-        {message && <p className="text-small">{message}</p>}
+      <Icon size={18} className={cn("mt-0.5 shrink-0", cfg.iconColor)} />
+      <div className="space-y-0.5 text-xs md:text-sm">
+        {title && <p className="font-semibold tracking-tight">{title}</p>}
+        {message && <p className="opacity-90">{message}</p>}
       </div>
     </div>
   );
 }
+
 export default Alert;

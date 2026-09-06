@@ -1,6 +1,7 @@
 import { apiClient } from "./apiClient";
 
 export const predictionApi = {
+  createPrediction: (payload) => apiClient.post("/api/predictions", payload),
   predictHotspots: (payload) => apiClient.post("/api/predictions/hotspots", payload),
   predict: (payload) => apiClient.post("/api/predict", payload),
   getPredictions: (params = {}) => {
@@ -10,4 +11,3 @@ export const predictionApi = {
   getLatest: () => apiClient.get("/api/predictions/latest"),
   getById: (id) => apiClient.get(`/api/predictions/${id}`),
 };
-

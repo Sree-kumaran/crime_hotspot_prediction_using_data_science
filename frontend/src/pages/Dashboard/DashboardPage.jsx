@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, AlertTriangle, BarChart3, MapPin } from "lucide-react";
+import { Activity, AlertTriangle, BarChart3, MapPin, RefreshCw, Layers } from "lucide-react";
 
 import {
   StatCard,
@@ -48,7 +48,6 @@ function DashboardPage() {
         getLatestPrediction().catch(() => ({ data: null })),
       ]);
 
-      // Backend pagination response: { data, page, limit, total }
       const normalizedIncidents = Array.isArray(incRes?.data)
         ? incRes.data
         : [];
@@ -74,12 +73,11 @@ function DashboardPage() {
       });
     } catch (err) {
       console.error("Dashboard load failed:", err);
-      setError(err?.message || "Unable to load dashboard data.");
+      setError(err?.message || "Unable to load crime intelligence dashboard data.");
     } finally {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     let mounted = true;
@@ -111,32 +109,36 @@ function DashboardPage() {
     ).length;
   }, [analytics, incidents]);
 
-  const recentIncidentRows = incidents.slice(0, 6).map((i) => ({
-    id: i.id || i._id || "-",
-    type: i.crime_type || i.type || "-",
-    location: i.location || "-",
+  const recentIncidentRows = incidents.slice(0, 8).map((i) => ({
+    id: <span className="font-mono text-palette-almond text-xs">{i.id || i._id || "-"}</span>,
+    type: <span className="font-semibold text-palette-almond capitalize">{i.crime_type || i.type || "-"}</span>,
+    location: i.location || i.area || "-",
     date: i.date || "-",
     risk: <RiskBadge level={i.severity || i.riskLevel || "Moderate"} />,
-    status: i.status || "Open",
+    status: (
+      <span className="text-xs px-2 py-0.5 rounded bg-[#1e2444] border border-[#2b3254] text-palette-lilac">
+        {i.status || "Open"}
+      </span>
+    ),
   }));
 
   const tableColumns = [
     { key: "id", title: "Incident ID" },
     { key: "type", title: "Crime Type" },
-    { key: "location", title: "Location" },
+    { key: "location", title: "Location Area" },
     { key: "date", title: "Date" },
-    { key: "risk", title: "Risk" },
+    { key: "risk", title: "Risk Level" },
     { key: "status", title: "Status" },
   ];
 
   if (loading) {
     return (
       <section className="space-y-6">
-        <div>
-          <h2 className="section-title">Dashboard</h2>
-          <p className="section-subtitle">Loading crime intelligence data...</p>
+        <div className="pb-1 border-b border-[#262c4d]">
+          <h2 className="section-title">Crime Intelligence Dashboard</h2>
+          <p className="section-subtitle">Aggregating live NYC incident and hotspot data...</p>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <SkeletonCard />
           <SkeletonCard />
           <SkeletonCard />
@@ -149,93 +151,121 @@ function DashboardPage() {
   if (error) {
     return (
       <section className="space-y-4">
-        <h2 className="section-title">Dashboard</h2>
-        <Alert type="error" title="Unable to load crime data" message={error} />
-        <Button onClick={loadDashboard}>Retry</Button>
+        <h2 className="section-title">Crime Intelligence Dashboard</h2>
+        <Alert type="error" title="Dashboard Load Failure" message={error} />
+        <Button variant="secondary" onClick={loadDashboard}>Retry Connection</Button>
       </section>
     );
   }
 
   return (
     <section className="space-y-6">
-      <div>
-        <h2 className="section-title">Dashboard</h2>
-        <p className="section-subtitle">
-          Operational overview of incidents, hotspots, and risk indicators.
-        </p>
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-[#262c4d]">
+        <div>
+          <h2 className="section-title">Crime Intelligence Dashboard</h2>
+          <p className="section-subtitle">
+            Operational overview of geospatial incidents, hotspot risk indicators, and neural predictions
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={loadDashboard}
+          className="flex items-center gap-1.5 self-start sm:self-auto text-xs"
+        >
+          <RefreshCw size={14} />
+          Refresh
+        </Button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Metric Cards Row */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Crime Incidents"
           value={totalIncidents}
           icon={<Activity size={18} />}
+          description="Logged incidents in database"
         />
         <StatCard
-          title="High-Risk Locations"
+          title="High-Risk Incidents"
           value={highRiskCount}
-          icon={<AlertTriangle size={18} />}
+          icon={<AlertTriangle size={18} className="text-red-400" />}
+          description="Assault, robbery & violent felonies"
         />
         <StatCard
-          title="Predictions Generated"
+          title="Neural Predictions Logged"
           value={predictionStats.totalPredictions}
-          icon={<BarChart3 size={18} />}
+          icon={<BarChart3 size={18} className="text-palette-almond" />}
+          description="ConvLSTM spatiotemporal runs"
         />
         <StatCard
-          title="Active Hotspots"
+          title="Active Hotspots Monitored"
           value={predictionStats.activeHotspots}
-          icon={<MapPin size={18} />}
+          icon={<MapPin size={18} className="text-palette-almond" />}
+          description="Top-20 density clusters"
         />
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <ChartContainer title="Crime Trend">
+      {/* Analytics Charts & Risk Breakdown */}
+      <div className="grid lg:grid-cols-2 gap-5">
+        <ChartContainer title="14-Day Crime Incident Trend">
           {analytics.trendData.length ? (
             <BarChartView data={analytics.trendData} />
           ) : (
             <EmptyState
-              title="No trend data"
-              description="Crime trend analytics are not available yet."
+              title="No trend data recorded"
+              description="Incident trend history will appear as records are logged."
             />
           )}
         </ChartContainer>
 
-        <Card>
-          <CardHeader>
-            <h3>Risk Overview</h3>
+        <Card className="border-[#262c4d]">
+          <CardHeader className="bg-palette-ink/40">
+            <h3 className="text-sm font-semibold text-palette-almond">
+              Severity & Risk Level Breakdown
+            </h3>
           </CardHeader>
-          <CardBody className="space-y-2">
+          <CardBody className="space-y-3 p-5">
             {analytics.riskOverview.length ? (
               analytics.riskOverview.map((r) => (
                 <div
                   key={r.label}
-                  className="flex items-center justify-between"
+                  className="flex items-center justify-between p-3 rounded-lg bg-palette-ink border border-[#262c4d]"
                 >
-                  <span>{r.label} Risk</span>
-                  <span className="font-semibold">{r.value}</span>
+                  <div className="flex items-center gap-2">
+                    <RiskBadge level={r.label} />
+                  </div>
+                  <span className="font-bold text-palette-almond text-sm">{r.value} Incidents</span>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-400">
-                No risk overview data available.
+              <p className="text-xs text-palette-lilac">
+                No risk breakdown data available.
               </p>
             )}
           </CardBody>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <h3>Recent Incidents</h3>
+      {/* Recent Incidents Table */}
+      <Card className="border-[#262c4d]">
+        <CardHeader className="flex justify-between items-center bg-palette-ink/40">
+          <h3 className="text-sm font-semibold text-palette-almond">
+            Recent Crime Incidents Registry
+          </h3>
+          <span className="text-[11px] text-palette-lilac">Showing latest recorded incidents</span>
         </CardHeader>
-        <CardBody>
+        <CardBody className="p-0">
           {recentIncidentRows.length ? (
             <Table columns={tableColumns} data={recentIncidentRows} />
           ) : (
-            <EmptyState
-              title="No crime records available"
-              description="There are currently no incident records in the database."
-            />
+            <div className="p-5">
+              <EmptyState
+                title="No crime incident records"
+                description="The crimes collection currently has no active records."
+              />
+            </div>
           )}
         </CardBody>
       </Card>

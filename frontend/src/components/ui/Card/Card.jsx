@@ -1,46 +1,77 @@
 import { cn } from "../../../lib/utils";
 
-export function Card({ className, children }) {
-  return <article className={cn("card-base", className)}>{children}</article>;
-}
-export function CardHeader({ className, children }) {
+export function Card({ className, children, ...props }) {
   return (
-    <div className={cn("px-5 pt-5 pb-3 border-b border-border", className)}>
+    <article className={cn("card-base", className)} {...props}>
       {children}
-    </div>
+    </article>
   );
 }
-export function CardBody({ className, children }) {
-  return <div className={cn("px-5 py-4", className)}>{children}</div>;
-}
-export function CardFooter({ className, children }) {
+
+export function CardHeader({ className, children, ...props }) {
   return (
     <div
       className={cn(
-        "px-5 py-3 border-t border-border bg-bg-muted/50 rounded-b-xl",
+        "px-5 py-4 border-b border-[#262c4d] flex items-center justify-between text-palette-almond",
         className,
       )}
+      {...props}
     >
       {children}
     </div>
   );
 }
 
-export function StatCard({ title, value, icon, description }) {
+export function CardBody({ className, children, ...props }) {
   return (
-    <Card>
-      <CardBody>
+    <div className={cn("px-5 py-4 text-palette-lilac", className)} {...props}>
+      {children}
+    </div>
+  );
+}
+
+export function CardFooter({ className, children, ...props }) {
+  return (
+    <div
+      className={cn(
+        "px-5 py-3 border-t border-[#262c4d] bg-[#12162a]/70 rounded-b-xl text-palette-lilac",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function StatCard({ title, value, icon, description, trend, className }) {
+  return (
+    <Card className={cn("hover:border-palette-grape transition-all duration-200", className)}>
+      <CardBody className="p-5">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-caption text-text-muted">{title}</p>
-            <p className="text-2xl font-bold mt-1">{value}</p>
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold tracking-wider uppercase text-palette-lilac">
+              {title}
+            </p>
+            <p className="text-2xl lg:text-3xl font-bold text-palette-almond tracking-tight">
+              {value}
+            </p>
             {description && (
-              <p className="text-small text-text-secondary mt-1">
+              <p className="text-xs text-palette-lilac/80 pt-0.5">
                 {description}
               </p>
             )}
+            {trend && (
+              <p className="text-[11px] font-medium text-palette-almond/90">
+                {trend}
+              </p>
+            )}
           </div>
-          <div className="p-2 rounded-lg bg-bg-muted">{icon}</div>
+          {icon && (
+            <div className="p-2.5 rounded-lg bg-[#1e2444] border border-[#2b3254] text-palette-almond">
+              {icon}
+            </div>
+          )}
         </div>
       </CardBody>
     </Card>

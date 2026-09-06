@@ -1,39 +1,84 @@
 @import "tailwindcss";
 
+@theme {
+  --color-palette-almond: #f1dac4;
+  --color-palette-lilac: #a69cac;
+  --color-palette-grape: #474973;
+  --color-palette-prussian: #161b33;
+  --color-palette-ink: #0d0c1d;
+
+  --color-bg-app: #0d0c1d;
+  --color-bg-surface: #161b33;
+  --color-bg-surface-elevated: #1e2444;
+  --color-bg-surface-muted: #12162a;
+
+  --color-text-primary: #f1dac4;
+  --color-text-secondary: #a69cac;
+  --color-text-muted: #787085;
+
+  --shadow-card: 0 8px 24px rgba(13, 12, 29, 0.4);
+  --shadow-glow: 0 0 16px rgba(241, 218, 196, 0.15);
+  --shadow-grape: 0 0 16px rgba(71, 73, 115, 0.35);
+}
+
 @layer base {
   body {
-    @apply font-sans antialiased;
-    background-color: #1f2f36; /* app background (darker than primary) */
-    color: #e5e7eb;
+    background-color: #0d0c1d;
+    color: #f1dac4;
+  }
+
+  /* Custom dark scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0d0c1d;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #262c4d;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #474973;
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-offset-2;
-    --tw-ring-color: #2a3d45;
-    --tw-ring-offset-color: #111827;
+    outline: none;
+    box-shadow: 0 0 0 2px #0d0c1d, 0 0 0 4px #a69cac;
   }
 }
 
 @layer components {
   .page-shell {
     min-height: 100vh;
-    background-color: #1f2f36;
+    background-color: #0d0c1d;
   }
 
   .section-title {
-    @apply text-2xl font-semibold;
-    color: #f3f4f6;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #f1dac4;
   }
 
   .section-subtitle {
-    @apply text-sm;
-    color: #c7c7c7;
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    color: #a69cac;
   }
 
   .card-base {
-    @apply rounded-xl border shadow-sm;
-    background-color: #2a3d45;
-    border-color: #3f535c;
-    color: #e5e7eb;
+    border-radius: 0.75rem;
+    border: 1px solid #262c4d;
+    background-color: #161b33;
+    color: #f1dac4;
+    box-shadow: 0 8px 24px rgba(13, 12, 29, 0.4);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .card-base:hover {
+    border-color: #474973;
   }
 }
