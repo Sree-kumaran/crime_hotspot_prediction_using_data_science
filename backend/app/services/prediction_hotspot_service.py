@@ -7,6 +7,7 @@ from app.ml.preprocessing import build_convlstm_input
 from app.ml.predictor import predict_grid
 from app.ml.hotspot_extractor import extract_hotspots
 from app.ml.model_loader import get_metadata
+from app.services.settings_service import get_app_settings
 
 
 async def generate_hotspot_prediction(prediction_date_or_incident):
@@ -14,6 +15,20 @@ async def generate_hotspot_prediction(prediction_date_or_incident):
     db = get_database()
     metadata = get_metadata()
     seq_len = metadata["sequence_length"]
+
+    # Load dynamic user configuration settings
+    try:
+        app_settings = await get_app_settings()
+    except Exception:
+        app_settings = {
+            "low_risk_threshold": 0.45,
+            "high_risk_threshold": 0.75,
+            "top_k_hotspots": 20,
+        }
+
+    low_thresh = float(app_settings.get("low_risk_threshold", 0.45))
+    high_thresh = float(app_settings.get("high_risk_threshold", 0.75))
+    top_k = int(app_settings.get("top_k_hotspots", 20))
 
     incident_record = None
     target_date = None
@@ -27,15 +42,16 @@ async def generate_hotspot_prediction(prediction_date_or_incident):
                 "crime_type": inc.get("crime_type", "theft").lower(),
                 "category": inc.get("crime_type", "theft").lower(),
                 "severity": inc.get("severity", "Moderate"),
-                "area": "User Incident Location",
-                "location": f"Reported Incident ({inc.get('latitude'):.4f}, {inc.get('longitude'):.4f})",
+                "area": inc.get("area") or "User Incident Location",
+                "location": inc.get("location") or f"Reported Incident ({inc.get('latitude'):.4f}, {inc.get('longitude'):.4f})",
                 "latitude": float(inc["latitude"]),
                 "longitude": float(inc["longitude"]),
                 "date": str(target_date),
                 "time": str(inc.get("time") or "12:00"),
                 "datetime": f"{target_date}T{inc.get('time') or '12:00'}:00",
-                "status": "Reported",
-                "description": inc.get("description") or "Incident submitted via Crime Prediction Interface",
+                "status": inc.get("status") or "Reported",
+                "description": inc.get("description") or "Incident submitted via Crime Data Ingestion Interface",
+                "created_at": datetime.utcnow().isoformat(),
             }
     elif hasattr(prediction_date_or_incident, "date") and hasattr(prediction_date_or_incident, "latitude"):
         inc = prediction_date_or_incident
@@ -45,15 +61,16 @@ async def generate_hotspot_prediction(prediction_date_or_incident):
                 "crime_type": (inc.crime_type or "theft").lower(),
                 "category": (inc.crime_type or "theft").lower(),
                 "severity": inc.severity or "Moderate",
-                "area": "User Incident Location",
-                "location": f"Reported Incident ({inc.latitude:.4f}, {inc.longitude:.4f})",
+                "area": getattr(inc, "area", None) or "User Incident Location",
+                "location": getattr(inc, "location", None) or f"Reported Incident ({inc.latitude:.4f}, {inc.longitude:.4f})",
                 "latitude": float(inc.latitude),
                 "longitude": float(inc.longitude),
                 "date": str(target_date),
                 "time": str(inc.time or "12:00"),
                 "datetime": f"{target_date}T{inc.time or '12:00'}:00",
-                "status": "Reported",
-                "description": inc.description or "Incident submitted via Crime Prediction Interface",
+                "status": getattr(inc, "status", None) or "Reported",
+                "description": inc.description or "Incident submitted via Crime Data Ingestion Interface",
+                "created_at": datetime.utcnow().isoformat(),
             }
     elif hasattr(prediction_date_or_incident, "prediction_date") and prediction_date_or_incident.prediction_date:
         target_date = prediction_date_or_incident.prediction_date
@@ -63,15 +80,16 @@ async def generate_hotspot_prediction(prediction_date_or_incident):
                 "crime_type": (inc.crime_type or "theft").lower(),
                 "category": (inc.crime_type or "theft").lower(),
                 "severity": inc.severity or "Moderate",
-                "area": "User Incident Location",
-                "location": f"Reported Incident ({inc.latitude:.4f}, {inc.longitude:.4f})",
+                "area": getattr(inc, "area", None) or "User Incident Location",
+                "location": getattr(inc, "location", None) or f"Reported Incident ({inc.latitude:.4f}, {inc.longitude:.4f})",
                 "latitude": float(inc.latitude),
                 "longitude": float(inc.longitude),
                 "date": str(inc.date or target_date),
                 "time": str(inc.time or "12:00"),
                 "datetime": f"{inc.date or target_date}T{inc.time or '12:00'}:00",
-                "status": "Reported",
-                "description": inc.description or "Incident submitted via Crime Prediction Interface",
+                "status": getattr(inc, "status", None) or "Reported",
+                "description": inc.description or "Incident submitted via Crime Data Ingestion Interface",
+                "created_at": datetime.utcnow().isoformat(),
             }
     else:
         target_date = prediction_date_or_incident
@@ -131,17 +149,24 @@ async def generate_hotspot_prediction(prediction_date_or_incident):
         pred_grid = predict_grid(x)
         inf_ms = (time.perf_counter() - inf_start) * 1000
 
-        # Step 5: Postprocess + top-20 hotspot extraction
+        # Step 5: Postprocess + top-K hotspot extraction using dynamic thresholds
         post_start = time.perf_counter()
-        hotspots, summary = extract_hotspots(pred_grid, top_k=20)
+        hotspots, summary = extract_hotspots(
+            pred_grid,
+            top_k=top_k,
+            low_threshold=low_thresh,
+            high_threshold=high_thresh,
+        )
         post_ms = (time.perf_counter() - post_start) * 1000
 
         # Compute overall risk score and level
         overall_score = 0.0
         if hotspots:
-            overall_score = float(sum(h["risk_score"] for h in hotspots[:5]) / min(5, len(hotspots)))
+            overall_score = float(sum(h["risk_score"] for h in hotspots) / len(hotspots))
         summary["overall_risk_score"] = round(overall_score, 4)
-        summary["overall_risk_level"] = "High" if overall_score >= 0.75 else ("Medium" if overall_score >= 0.45 else "Low")
+        summary["overall_risk_level"] = (
+            "High" if overall_score >= high_thresh else ("Medium" if overall_score >= low_thresh else "Low")
+        )
 
         response = {
             "prediction_date": target_date,

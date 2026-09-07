@@ -9,7 +9,7 @@ async def analytics_overview():
     db = get_database()
     total = await db.crimes.count_documents({})
     high = await db.crimes.count_documents({"severity": {"$in": ["High", "Critical"]}})
-    open_cases = await db.crimes.count_documents({"status": "Open"})
+    open_cases = await db.crimes.count_documents({"status": {"$in": ["Open", "Reported", "Under Investigation"]}})
     return {
         "total_crimes": total,
         "high_risk_count": high,
@@ -30,11 +30,13 @@ async def analytics_crime_trends():
     db = get_database()
     pipeline = [
         {"$group": {"_id": "$date", "count": {"$sum": 1}}},
-        {"$sort": {"_id": 1}},
+        {"$sort": {"_id": -1}},
         {"$limit": 14},
     ]
     data = await db.crimes.aggregate(pipeline).to_list(length=14)
-    return [{"date": i["_id"], "count": i["count"]} for i in data if i["_id"]]
+    # Sort chronologically ascending for trend chart
+    chronological = sorted(data, key=lambda x: x["_id"] or "")
+    return [{"date": i["_id"], "count": i["count"]} for i in chronological if i["_id"]]
 
 
 @router.get("/analytics/risk-overview")
@@ -42,4 +44,4 @@ async def analytics_risk_overview():
     db = get_database()
     pipeline = [{"$group": {"_id": "$severity", "count": {"$sum": 1}}}]
     data = await db.crimes.aggregate(pipeline).to_list(length=20)
-    return [{"label": i["_id"] or "Low", "value": i["count"]} for i in data]
+    return [{"label": i["_id"] or "Moderate", "value": i["count"]} for i in data]

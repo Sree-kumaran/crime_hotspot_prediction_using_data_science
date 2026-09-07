@@ -54,10 +54,13 @@ export default function MapPage() {
 
   const filteredHotspots = useMemo(() => {
     return hotspots.filter((h) => {
-      if (riskLevel !== "all" && h.risk_level?.toLowerCase() !== riskLevel.toLowerCase()) {
-        return false;
-      }
-      return true;
+      if (riskLevel === "all") return true;
+      const lvl = h.risk_level?.toLowerCase();
+      const target = riskLevel.toLowerCase();
+      if (target === "medium" && (lvl === "medium" || lvl === "moderate")) return true;
+      if (target === "high" && lvl === "high") return true;
+      if (target === "low" && lvl === "low") return true;
+      return false;
     });
   }, [hotspots, riskLevel]);
 
