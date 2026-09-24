@@ -8,12 +8,17 @@ import {
   Activity,
   Zap,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
+  Target,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, CardBody, CardHeader } from "../../components/ui/Card/Card";
 import Input from "../../components/ui/Input/Input";
 import Button from "../../components/ui/Button/Button";
 import Alert from "../../components/ui/Alert/Alert";
-import HotspotMap from "../../components/map/HotspotMap";
+import LeafletInteractiveMap from "../../components/map/LeafletInteractiveMap";
 import PredictionSummary from "../../components/prediction/PredictionSummary";
 import HotspotList from "../../components/prediction/HotspotList";
 import PredictionLegend from "../../components/prediction/PredictionLegend";
@@ -31,7 +36,13 @@ export default function PredictionPage() {
   const [selectedHotspot, setSelectedHotspot] = useState(null);
   const [activeTab, setActiveTab] = useState("predict"); // "predict" | "history"
 
-  const quickDates = ["2024-03-25", "2024-03-20", "2024-03-15", "2024-03-10"];
+  const quickDates = [
+    { label: "Today (2024-03-25)", date: "2024-03-25" },
+    { label: "Tomorrow (2024-03-26)", date: "2024-03-26" },
+    { label: "Day +2 (2024-03-27)", date: "2024-03-27" },
+    { label: "Past (2024-03-20)", date: "2024-03-20" },
+    { label: "Past (2024-03-15)", date: "2024-03-15" },
+  ];
 
   const handleComputePrediction = async (e, dateOverride) => {
     if (e) e.preventDefault();
@@ -63,8 +74,19 @@ export default function PredictionPage() {
     }
   };
 
+  const handleStepDay = (daysDelta) => {
+    try {
+      const curr = new Date(predictionDate);
+      curr.setDate(curr.getDate() + daysDelta);
+      const nextDate = curr.toISOString().split("T")[0];
+      setPredictionDate(nextDate);
+      handleComputePrediction(null, nextDate);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
-    // Attempt to load latest prediction or default date on initial mount
     async function loadInitial() {
       try {
         setLoading(true);
@@ -103,10 +125,10 @@ export default function PredictionPage() {
         <div>
           <h2 className="section-title flex items-center gap-2.5">
             <Sparkles className="w-5 h-5 text-palette-almond" />
-            Spatiotemporal Crime Hotspot Prediction
+            Next Crime Spatiotemporal Hotspot Prediction
           </h2>
           <p className="section-subtitle mt-0.5">
-            ConvLSTM 2D deep spatiotemporal neural network inference over accumulated historical dataset
+            Deep ConvLSTM 2D Neural Network forecasting next crime locations based on 7-day sliding historical crime dynamics
           </p>
         </div>
 
@@ -142,49 +164,77 @@ export default function PredictionPage() {
         <div className="space-y-6">
           {/* Prediction Controls Deck */}
           <Card className="border-[#262c4d]">
-            <CardHeader className="flex justify-between items-center bg-palette-ink/40 py-3.5">
+            <CardHeader className="flex flex-wrap justify-between items-center bg-palette-ink/40 py-3.5 gap-2">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-palette-almond" />
                 <h3 className="text-sm font-semibold tracking-tight text-palette-almond">
                   ConvLSTM Spatiotemporal Inference Control Deck
                 </h3>
               </div>
-              <span className="text-[11px] font-mono text-palette-lilac bg-[#1e2444] px-2.5 py-0.5 rounded border border-[#2b3254]">
-                Architecture: (1, 7, 20, 20, 5)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono text-palette-lilac bg-[#1e2444] px-2.5 py-0.5 rounded border border-[#2b3254]">
+                  Architecture: (1, 7, 20, 20, 5)
+                </span>
+                <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/40">
+                  Dynamic 7-Day Sliding Window
+                </span>
+              </div>
             </CardHeader>
-            <CardBody className="p-5">
+            <CardBody className="p-5 space-y-4">
               <form onSubmit={(e) => handleComputePrediction(e)} className="grid md:grid-cols-3 gap-5 items-end">
                 <div>
-                  <Input
-                    label="Target Prediction Date"
-                    type="date"
-                    value={predictionDate}
-                    onChange={(e) => setPredictionDate(e.target.value)}
-                    required
-                  />
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-palette-lilac mb-1.5">
+                    Target Prediction Date
+                  </label>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleStepDay(-1)}
+                      disabled={loading}
+                      title="Step Back 1 Day"
+                      className="p-2 rounded-lg bg-[#0c0d16] border border-[#262c4d] text-palette-lilac hover:text-palette-almond hover:border-palette-grape transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="date"
+                      value={predictionDate}
+                      onChange={(e) => setPredictionDate(e.target.value)}
+                      required
+                      className="w-full bg-[#0c0d16] border border-[#262c4d] text-palette-almond text-xs px-3 py-2 rounded-lg font-semibold focus:outline-none focus:border-palette-almond"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleStepDay(1)}
+                      disabled={loading}
+                      title="Step Forward 1 Day (Test Tomorrow)"
+                      className="p-2 rounded-lg bg-[#0c0d16] border border-[#262c4d] text-palette-lilac hover:text-palette-almond hover:border-palette-grape transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-palette-lilac mb-1.5">
-                    Benchmark Historical Dates
+                    Quick Benchmark Presets
                   </label>
                   <div className="flex flex-wrap gap-1.5">
                     {quickDates.map((qd) => (
                       <button
                         type="button"
-                        key={qd}
+                        key={qd.date}
                         onClick={() => {
-                          setPredictionDate(qd);
-                          handleComputePrediction(null, qd);
+                          setPredictionDate(qd.date);
+                          handleComputePrediction(null, qd.date);
                         }}
                         className={`text-xs px-2.5 py-1.5 rounded-lg border transition-all duration-150 font-medium ${
-                          predictionDate === qd
+                          predictionDate === qd.date
                             ? "bg-palette-almond text-palette-ink border-palette-almond font-semibold shadow-glow"
-                            : "bg-palette-ink border-[#262c4d] text-palette-lilac hover:text-palette-almond hover:border-palette-grape"
+                            : "bg-[#0c0d16] border-[#262c4d] text-palette-lilac hover:text-palette-almond hover:border-palette-grape"
                         }`}
                       >
-                        {qd}
+                        {qd.label}
                       </button>
                     ))}
                   </div>
@@ -202,6 +252,16 @@ export default function PredictionPage() {
                   </Button>
                 </div>
               </form>
+
+              {/* Informative Explanation */}
+              <div className="bg-[#0c0d16]/70 p-3 rounded-lg border border-[#262c4d] text-[11px] text-palette-lilac flex items-center justify-between gap-2">
+                <span>
+                  💡 <strong>How it works:</strong> The ConvLSTM 2D network ingests the 7 daily crime density grids immediately preceding <strong className="text-palette-almond">{predictionDate}</strong>. Shifting dates changes the 7-day input tensor and produces a distinct prediction map!
+                </span>
+                <span className="text-palette-almond font-semibold flex-shrink-0">
+                  Target: {predictionDate}
+                </span>
+              </div>
             </CardBody>
           </Card>
 
@@ -216,29 +276,33 @@ export default function PredictionPage() {
           {/* Prediction Results Display */}
           {result && (
             <div className="space-y-6 animate-fadeIn">
-              {/* Summary Card with Overall Score Progress & 4 Stat Tiles */}
+              {/* Spotlight Forecast Banner + 4 Stat Tiles */}
               <PredictionSummary result={result} />
 
-              {/* Spatiotemporal Interactive Map */}
+              {/* Interactive Google-Maps-Style Spatiotemporal Map */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center px-1">
                   <h3 className="text-sm font-semibold text-palette-almond flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-palette-almond" />
-                    Neural Spatiotemporal Hotspot Heatmap
+                    Neural Spatiotemporal Hotspot Heatmap (Interactive Google Maps Zoom & Pan)
                   </h3>
                   <span className="text-[11px] text-palette-lilac">
-                    Target: <strong className="text-palette-almond">{result.prediction_date}</strong> | Model: {result.model?.name || "ConvLSTM 2D"}
+                    Target Date: <strong className="text-palette-almond">{result.prediction_date}</strong> | Model: {result.model?.name || "ConvLSTM 2D"}
                   </span>
                 </div>
-                <HotspotMap
+
+                <LeafletInteractiveMap
                   hotspots={result.hotspots || []}
+                  crimes={result.historical_crimes || []}
                   selectedHotspot={selectedHotspot}
                   onSelectHotspot={setSelectedHotspot}
-                  height="h-[520px]"
+                  mode="hybrid"
+                  height="h-[560px]"
+                  targetDate={result.prediction_date}
                 />
               </div>
 
-              {/* Ranked Hotspot Clusters */}
+              {/* Ranked Hotspot Clusters List */}
               <HotspotList
                 hotspots={result.hotspots || []}
                 selectedHotspot={selectedHotspot}

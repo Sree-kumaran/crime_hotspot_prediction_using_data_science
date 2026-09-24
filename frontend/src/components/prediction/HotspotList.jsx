@@ -1,4 +1,4 @@
-import { MapPin, Target, Layers } from "lucide-react";
+import { MapPin, Target, Layers, Clock } from "lucide-react";
 import { RiskBadge } from "../ui/Badge/Badge";
 import { Card, CardBody, CardHeader } from "../ui/Card/Card";
 
@@ -15,11 +15,11 @@ export default function HotspotList({
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-palette-almond" />
           <h3 className="text-sm font-semibold text-palette-almond">
-            Top Predicted Hotspots ({hotspots.length} Clusters)
+            Top Ranked Hotspots ({hotspots.length} Clusters)
           </h3>
         </div>
         <span className="text-[11px] text-palette-lilac">
-          Sorted by ConvLSTM neural density intensity
+          Click any cluster to focus and zoom on map
         </span>
       </CardHeader>
       <CardBody className="p-4">
@@ -31,24 +31,27 @@ export default function HotspotList({
               selectedHotspot.longitude === h.longitude;
 
             const scorePct = ((h.risk_score || 0) * 100).toFixed(1);
+            const isTop1 = h.rank === 1 || idx === 0;
 
             return (
               <div
                 key={idx}
                 onClick={() => onSelectHotspot(h)}
-                className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-150 ${
+                className={`p-3.5 rounded-xl border cursor-pointer transition-all duration-150 relative ${
                   isSelected
-                    ? "bg-palette-grape/50 border-palette-almond ring-1 ring-palette-almond shadow-glow scale-[1.02]"
+                    ? "bg-palette-grape/50 border-palette-almond ring-2 ring-palette-almond shadow-glow scale-[1.02]"
                     : "bg-palette-ink border-[#262c4d] hover:border-palette-grape hover:bg-[#161b33]"
                 }`}
               >
                 <div className="flex justify-between items-center mb-2 pb-1.5 border-b border-[#262c4d]">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-[#1e2444] border border-[#2b3254] flex items-center justify-center text-[10px] font-bold text-palette-almond">
-                      #{idx + 1}
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      isTop1 ? "bg-red-500 text-white" : "bg-[#1e2444] text-palette-almond border border-[#2b3254]"
+                    }`}>
+                      #{h.rank || idx + 1}
                     </span>
-                    <span className="text-xs font-bold text-palette-almond">
-                      Cluster {idx + 1}
+                    <span className="text-xs font-bold text-white truncate max-w-[110px]">
+                      {h.location_name || `Cluster ${idx + 1}`}
                     </span>
                   </div>
                   <RiskBadge
@@ -59,6 +62,11 @@ export default function HotspotList({
                 </div>
 
                 <div className="space-y-1 text-xs text-palette-lilac">
+                  {h.borough && (
+                    <div className="text-[11px] text-palette-almond font-medium">
+                      Borough: {h.borough}
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span>Risk Score:</span>
                     <span className="font-bold text-palette-almond text-sm">
@@ -66,13 +74,18 @@ export default function HotspotList({
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Density Intensity:</span>
-                    <span className="font-mono text-palette-almond">
-                      {h.predicted_intensity}
+                    <span>Intensity:</span>
+                    <span className="font-mono text-white">
+                      {(h.predicted_intensity || 0).toFixed(4)}
                     </span>
                   </div>
-                  <div className="text-[11px] text-palette-lilac/70 pt-1.5 mt-1 border-t border-[#262c4d] flex items-center justify-between">
-                    <span>Location:</span>
+                  {h.peak_risk_hours && (
+                    <div className="text-[10px] text-amber-300 font-medium truncate pt-0.5">
+                      🕒 {h.peak_risk_hours}
+                    </div>
+                  )}
+                  <div className="text-[10px] text-palette-lilac/70 pt-1.5 mt-1 border-t border-[#262c4d] flex items-center justify-between">
+                    <span>Coords:</span>
                     <span className="font-mono text-palette-almond">
                       {h.latitude.toFixed(4)}, {h.longitude.toFixed(4)}
                     </span>
